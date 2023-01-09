@@ -9,30 +9,8 @@
     unused_qualifications
 )]
 
-mod api;
-mod auth;
-mod error;
-mod models;
-mod pockety;
-
-// #[derive(serde::Serialize, serde::Deserialize, Debug)]
-// pub struct PocketGetResponse {
-//     list: Vec<PocketItem>, // must be Vec
-//     status: u16,
-//     complete: bool, // must be bool
-//     error: Option<String>,
-//     //search_meta: PocketSearchMeta,
-//     since: Timestamp,
-// }
-
-// #[derive(serde::Serialize, serde::Deserialize, Debug)]
-// pub struct PocketSendRequest {
-//     pocket: Pocket,
-//     actions: &[PocketActionName],
-// }
-
-// #[derive(serde::Serialize, serde::Deserialize, Debug)]
-// pub struct PocketSendResponse {
-//     status: u16,
-//     action_results: Vec<bool>,
-// }
+pub mod api;
+pub mod auth;
+pub mod error;
+pub mod models;
+pub mod pockety;

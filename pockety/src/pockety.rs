@@ -89,41 +89,4 @@ impl Pockety {
     pub fn add(&self) -> AddHandler {
         AddHandler::new(self)
     }
-
-    // pub fn get_auth_url(&mut self) -> PocketResult<Url> {
-    //     let request = try!(json::encode(&OAuthRequest {
-    //         consumer_key: &*self.consumer_key,
-    //         redirect_uri: "rustapi:finishauth",
-    //         state: None
-    //     }));
-
-    //     self.request("https://getpocket.com/v3/oauth/request", &*request)
-    //         .and_then(|r: PocketOAuthResponse| {
-    //             let mut url = Url::parse("https://getpocket.com/auth/authorize").unwrap();
-    //             url.set_query_from_pairs(
-    //                 vec![
-    //                     ("request_token", &*r.code),
-    //                     ("redirect_uri", "rustapi:finishauth"),
-    //                 ]
-    //                 .into_iter(),
-    //             );
-    //             self.code = Some(r.code);
-    //             Ok(url)
-    //         })
-    // }
-
-    // pub fn authorize(&mut self) -> PocketResult<String> {
-    //     let request = try!(json::encode(&PocketAuthorizeRequest {
-    //         consumer_key: &*self.consumer_key,
-    //         code: self.code.as_ref().map(|v| &**v).unwrap()
-    //     }));
-
-    //     match self.request("https://getpocket.com/v3/oauth/authorize", &*request) {
-    //         Ok(r @ PocketAuthorizeResponse { .. }) => {
-    //             self.access_token = Some(r.access_token);
-    //             Ok(r.username)
-    //         }
-    //         Err(e) => Err(e),
-    //     }
-    // }
 }
