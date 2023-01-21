@@ -18,19 +18,19 @@ use crate::{
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
 pub struct RetrieveRequestBody {
-    consumer_key: String,
-    access_token: String,
-    search:       Option<String>,
-    domain:       Option<String>,
-    tag:          Option<Tag>,
-    state:        Option<State>,
-    content_type: Option<ContentType>,
-    detail_type:  Option<DetailType>,
-    favorite:     Option<bool>,
-    since:        Option<Timestamp>,
-    sort:         Option<Sort>,
-    count:        Option<u32>,
-    offset:       Option<u32>,
+    pub consumer_key: String,
+    pub access_token: String,
+    pub search:       Option<String>,
+    pub domain:       Option<String>,
+    pub tag:          Option<Tag>,
+    pub state:        Option<State>,
+    pub content_type: Option<ContentType>,
+    pub detail_type:  Option<DetailType>,
+    pub favorite:     Option<bool>,
+    pub since:        Option<Timestamp>,
+    pub sort:         Option<Sort>,
+    pub count:        Option<u32>,
+    pub offset:       Option<u32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
@@ -39,6 +39,7 @@ pub struct RetrieveResponse {
     pub status: u16,
 }
 
+#[derive(Debug)]
 pub struct RetrieveHandler<'po> {
     pockety: &'po Pockety,
     body:    RetrieveRequestBody,

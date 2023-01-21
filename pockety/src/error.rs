@@ -22,14 +22,13 @@ impl HttpError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ApiError {
     MissingAccessToken,
 }
 
 impl From<reqwest::Error> for PocketyError {
     fn from(error: reqwest::Error) -> Self {
-        println!("reqwest error: {}", error);
         PocketyError::Http(HttpError::new(
             reqwest::StatusCode::INTERNAL_SERVER_ERROR,
         ))

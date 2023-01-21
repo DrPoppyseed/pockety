@@ -1,20 +1,24 @@
+#[derive(Debug)]
 pub struct GetOAuthTokenRequest {
-    consumer_key: String,
-    redirect_uri: String,
-    state: Option<String>,
+    pub consumer_key: String,
+    pub redirect_uri: String,
+    pub state:        Option<String>,
 }
 
+#[derive(Debug)]
 pub struct GetOAuthTokenResponse {
-    code: String,
-    state: Option<String>,
+    pub code:  String,
+    pub state: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct GetAccessTokenRequest {
-    consumer_key: String,
-    code: String,
+    pub consumer_key: String,
+    pub code:         String,
 }
 
+#[derive(Debug)]
 pub struct GetAccessTokenResponse {
-    access_token: String,
-    username: String,
+    pub access_token: String,
+    pub username:     String,
 }

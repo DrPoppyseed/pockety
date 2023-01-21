@@ -1,5 +1,4 @@
-use futures::TryFutureExt;
-use reqwest::{Client, Response, StatusCode, Url};
+use reqwest::{Client, StatusCode, Url};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -9,14 +8,14 @@ use crate::{
 
 static POCKET_BASE_URL: &str = "https://getpocket.com/v3/";
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Auth {
     pub(crate) consumer_key:  String,
     pub(crate) request_token: Option<String>,
     pub(crate) access_token:  Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Pockety {
     pub base_url:    Url,
     pub(crate) auth: Auth,

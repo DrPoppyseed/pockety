@@ -1,7 +1,9 @@
 target
 Cargo.lock
+scraps
 
 .dccache
 
 .vscode
 .idea
+

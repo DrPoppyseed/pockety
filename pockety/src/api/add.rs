@@ -6,12 +6,12 @@ use crate::{
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
 pub struct AddRequestBody {
-    consumer_key: String,
-    access_token: String,
-    url:          String,
-    title:        Option<String>,
-    tags:         Option<Tags>,
-    tweet_id:     Option<String>,
+    pub consumer_key: String,
+    pub access_token: String,
+    pub url:          String,
+    pub title:        Option<String>,
+    pub tags:         Option<Tags>,
+    pub tweet_id:     Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
@@ -67,6 +67,7 @@ pub struct AddResponse {
     pub videos:           Vec<ItemVideo>,
 }
 
+#[derive(Debug)]
 pub struct AddHandler<'po> {
     pockety: &'po Pockety,
     body:    AddRequestBody,
