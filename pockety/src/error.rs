@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum PocketyError {
+pub enum Error {
     Http(HttpError),
     Api(ApiError),
     Json(String),
@@ -7,8 +7,8 @@ pub enum PocketyError {
 
 #[derive(Debug)]
 pub struct HttpError {
-    pub status:        reqwest::StatusCode,
-    pub error_code:    Option<String>,
+    pub status: reqwest::StatusCode,
+    pub error_code: Option<String>,
     pub error_message: Option<String>,
 }
 
@@ -25,18 +25,17 @@ impl HttpError {
 #[derive(Debug, Clone, Copy)]
 pub enum ApiError {
     MissingAccessToken,
+    MissingRequestToken,
 }
 
-impl From<reqwest::Error> for PocketyError {
+impl From<reqwest::Error> for Error {
     fn from(error: reqwest::Error) -> Self {
-        PocketyError::Http(HttpError::new(
-            reqwest::StatusCode::INTERNAL_SERVER_ERROR,
-        ))
+        Error::Http(HttpError::new(reqwest::StatusCode::INTERNAL_SERVER_ERROR))
     }
 }
 
-impl From<reqwest::header::ToStrError> for PocketyError {
+impl From<reqwest::header::ToStrError> for Error {
     fn from(error: reqwest::header::ToStrError) -> Self {
-        PocketyError::Json(error.to_string())
+        Error::Json(error.to_string())
     }
 }

@@ -1,6 +1,6 @@
 use std::{env, net::SocketAddr};
 
-use pockety::pockety::Pockety;
+use pockety::Pockety;
 
 use axum::{
     extract::State,

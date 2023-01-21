@@ -20,29 +20,29 @@ use crate::{
 pub struct RetrieveRequestBody {
     pub consumer_key: String,
     pub access_token: String,
-    pub search:       Option<String>,
-    pub domain:       Option<String>,
-    pub tag:          Option<Tag>,
-    pub state:        Option<State>,
+    pub search: Option<String>,
+    pub domain: Option<String>,
+    pub tag: Option<Tag>,
+    pub state: Option<State>,
     pub content_type: Option<ContentType>,
-    pub detail_type:  Option<DetailType>,
-    pub favorite:     Option<bool>,
-    pub since:        Option<Timestamp>,
-    pub sort:         Option<Sort>,
-    pub count:        Option<u32>,
-    pub offset:       Option<u32>,
+    pub detail_type: Option<DetailType>,
+    pub favorite: Option<bool>,
+    pub since: Option<Timestamp>,
+    pub sort: Option<Sort>,
+    pub count: Option<u32>,
+    pub offset: Option<u32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
 pub struct RetrieveResponse {
-    pub list:   Vec<PocketItem>,
+    pub list: Vec<PocketItem>,
     pub status: u16,
 }
 
 #[derive(Debug)]
 pub struct RetrieveHandler<'po> {
     pockety: &'po Pockety,
-    body:    RetrieveRequestBody,
+    body: RetrieveRequestBody,
 }
 
 impl<'po> RetrieveHandler<'po> {
@@ -108,7 +108,7 @@ impl<'po> RetrieveHandler<'po> {
         self
     }
 
-    pub async fn execute(self) -> Result<Vec<PocketItem>, error::PocketyError> {
+    pub async fn execute(self) -> Result<Vec<PocketItem>, error::Error> {
         let response: RetrieveResponse =
             self.pockety.post("/get", Some(&self.body)).await?;
         Ok(response.list)

@@ -1,5 +1,5 @@
 use crate::{
-    error::{ApiError::MissingAccessToken, PocketyError},
+    error::{ApiError::MissingAccessToken, Error},
     models::{ItemId, Tags, Timestamp},
     pockety::Pockety,
 };
@@ -25,11 +25,11 @@ pub enum PocketAction {
 #[serde(tag = "action", rename = "add")]
 pub struct Add {
     pub item_id: ItemId,
-    pub ref_id:  Option<u32>,
-    pub tags:    Option<String>,
-    pub time:    Option<Timestamp>,
-    pub title:   Option<String>,
-    pub url:     Option<String>,
+    pub ref_id: Option<u32>,
+    pub tags: Option<String>,
+    pub time: Option<Timestamp>,
+    pub title: Option<String>,
+    pub url: Option<String>,
 }
 
 #[derive(
@@ -38,7 +38,7 @@ pub struct Add {
 #[serde(tag = "action", rename = "archive")]
 pub struct Archive {
     pub item_id: ItemId,
-    pub time:    Timestamp,
+    pub time: Timestamp,
 }
 
 #[derive(
@@ -57,33 +57,33 @@ pub enum UpdateName {
     serde::Serialize, serde::Deserialize, Debug, Copy, Clone, PartialEq, Eq,
 )]
 pub struct Update {
-    pub action:  UpdateName,
+    pub action: UpdateName,
     pub item_id: ItemId,
-    pub time:    Timestamp,
+    pub time: Timestamp,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_add")]
 pub struct TagsAdd {
     pub item_id: ItemId,
-    pub tags:    Tags,
-    pub time:    Option<Timestamp>,
+    pub tags: Tags,
+    pub time: Option<Timestamp>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_replace")]
 pub struct TagsReplace {
     item_id: ItemId,
-    tags:    Tags,
-    time:    Option<Timestamp>,
+    tags: Tags,
+    time: Option<Timestamp>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_remove")]
 pub struct TagsRemove {
     pub item_id: ItemId,
-    pub tags:    Tags,
-    pub time:    Option<Timestamp>,
+    pub tags: Tags,
+    pub time: Option<Timestamp>,
 }
 
 #[derive(
@@ -92,7 +92,7 @@ pub struct TagsRemove {
 #[serde(tag = "action", rename = "tags_clear")]
 pub struct TagsClear {
     pub item_id: ItemId,
-    pub time:    Option<Timestamp>,
+    pub time: Option<Timestamp>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
@@ -100,13 +100,13 @@ pub struct TagsClear {
 pub struct TagRename {
     pub old_tag: String,
     pub new_tag: String,
-    pub time:    Option<Timestamp>,
+    pub time: Option<Timestamp>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tag_delete")]
 pub struct TagDelete {
-    pub tag:  String,
+    pub tag: String,
     pub time: Option<Timestamp>,
 }
 
@@ -114,12 +114,12 @@ pub struct TagDelete {
 pub struct ModifyRequestBody {
     pub consumer_key: String,
     pub access_token: String,
-    pub actions:      Vec<PocketAction>,
+    pub actions: Vec<PocketAction>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
 pub struct ModifyResponse {
-    pub status:         u16,
+    pub status: u16,
     pub action_results: Vec<bool>,
 }
 
@@ -141,12 +141,12 @@ impl<'po> ModifyHandler<'po> {
         self.actions.push(action);
     }
 
-    pub async fn send(self) -> Result<Vec<bool>, PocketyError> {
+    pub async fn send(self) -> Result<Vec<bool>, Error> {
         if let Some(access_token) = self.pockety.auth.access_token.clone() {
             let body = ModifyRequestBody {
                 consumer_key: self.pockety.auth.consumer_key.clone(),
                 access_token: access_token.clone(),
-                actions:      self.actions,
+                actions: self.actions,
             };
 
             let res: ModifyResponse =
@@ -154,7 +154,7 @@ impl<'po> ModifyHandler<'po> {
 
             Ok(res.action_results)
         } else {
-            Err(PocketyError::Api(MissingAccessToken))
+            Err(Error::Api(MissingAccessToken))
         }
     }
 }

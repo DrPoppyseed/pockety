@@ -16,3 +16,5 @@ pub mod models;
 
 mod pockety;
 pub use pockety::{Auth, Pockety};
+
+pub use reqwest;
