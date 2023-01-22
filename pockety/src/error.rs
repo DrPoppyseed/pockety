@@ -3,6 +3,7 @@ pub enum Error {
     Http(HttpError),
     Api(ApiError),
     Json(String),
+    Parse(String),
 }
 
 #[derive(Debug)]
@@ -37,5 +38,11 @@ impl From<reqwest::Error> for Error {
 impl From<reqwest::header::ToStrError> for Error {
     fn from(error: reqwest::header::ToStrError) -> Self {
         Error::Json(error.to_string())
+    }
+}
+
+impl From<url::ParseError> for Error {
+    fn from(error: url::ParseError) -> Self {
+        Error::Parse(error.to_string())
     }
 }

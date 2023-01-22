@@ -4,7 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# web framework
 axum = "0.6.3"
+axum-sessions = "0.4.1"
+
+# cors 
+tower = "0.4.13"
+tower-http = { version = "0.3.5", features = ["cors", "timeout"] }
+
 serde = { version = "1.0.152", features = ["derive"] }
 tokio = { version = "1.24.2", features = ["full"] }
+
+# we need rand crate to generate a session secret
+rand = "0.8.5"
+
+# pocket api client
 pockety = { path = "../../../pockety" }

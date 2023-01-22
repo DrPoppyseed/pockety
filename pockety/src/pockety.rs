@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use reqwest::{Client, StatusCode, Url};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -12,7 +14,43 @@ use crate::{
     error::{ApiError, Error, Error::Http, HttpError},
 };
 
-static POCKET_BASE_URL: &str = "https://getpocket.com/v3/";
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PocketyUrl(Inner);
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum Inner {
+    Base,
+    Authorize,
+}
+
+impl PocketyUrl {
+    pub const BASE: PocketyUrl = PocketyUrl(Inner::Base);
+
+    pub const AUTHORIZE: PocketyUrl = PocketyUrl(Inner::Authorize);
+
+    pub fn as_str(&self) -> &str {
+        match self.0 {
+            Inner::Base => "https://getpocket.com/v3",
+            Inner::Authorize => "https://getpocket.com/auth/authorize",
+        }
+    }
+
+    pub fn as_url(&self) -> Url {
+        Url::parse(self.as_str()).unwrap()
+    }
+}
+
+impl Default for PocketyUrl {
+    fn default() -> Self {
+        Self::BASE
+    }
+}
+
+impl std::fmt::Display for PocketyUrl {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct Auth {
@@ -38,7 +76,7 @@ impl Pockety {
         };
 
         Self {
-            base_url: Url::parse(POCKET_BASE_URL).unwrap(),
+            base_url: PocketyUrl::BASE.as_url(),
             redirect_url: Url::parse(redirect_url).unwrap(),
             auth,
             client: Client::new(),
@@ -94,12 +132,12 @@ impl Pockety {
 
     pub async fn get_request_token(
         &mut self,
-        state: Option<impl Into<String>>,
+        state: Option<String>,
     ) -> Result<String, Error> {
         let body = GetRequestTokenRequest {
             consumer_key: self.auth.consumer_key.clone(),
             redirect_uri: self.redirect_url.to_string(),
-            state: state.map(|v| v.into()),
+            state,
         };
 
         let response = self
@@ -113,7 +151,10 @@ impl Pockety {
         Ok(response.code)
     }
 
-    pub async fn get_access_token(&mut self) -> Result<String, Error> {
+    pub async fn get_access_token(
+        &mut self,
+        state: Option<String>,
+    ) -> Result<String, Error> {
         let code = self
             .auth
             .request_token
@@ -123,7 +164,7 @@ impl Pockety {
         let body = GetAccessTokenRequest {
             consumer_key: self.auth.consumer_key.clone(),
             code,
-            state: None,
+            state,
         };
 
         let response = self
