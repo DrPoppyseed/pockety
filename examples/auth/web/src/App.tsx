@@ -40,7 +40,14 @@ const Comp: Component = () => {
       <h1>Auth Example</h1>
       <button onClick={() => onLoginClick()}>Login with Pocket</button>
       <Show when={data()}>
-        <a href={data().toString()}>Grant permissions for Pocket</a>
+        <a
+          style={{
+            "margin-bottom": "1rem",
+          }}
+          href={data().toString()}
+        >
+          Grant permissions for Pocket
+        </a>
       </Show>
     </div>
   );
