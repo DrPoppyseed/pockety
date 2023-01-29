@@ -23,7 +23,12 @@ use serde::{Deserialize, Serialize};
 use tower_http::{cors::CorsLayer, trace};
 use tracing::Level;
 
-use crate::api::{get_access_token, get_request_token, health_check};
+use crate::api::{
+    get_access_token,
+    get_articles,
+    get_request_token,
+    health_check,
+};
 
 mod api;
 mod error;
@@ -78,6 +83,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(health_check))
+        .route("/articles", get(get_articles))
         .route("/auth/pocket", post(get_request_token))
         .route("/auth/authorize", post(get_access_token))
         .layer(cors_layer)

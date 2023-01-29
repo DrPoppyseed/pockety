@@ -1,11 +1,16 @@
-use async_session::{MemoryStore, Session, SessionStore};
+use async_session::{
+    chrono::{Duration, Utc},
+    MemoryStore,
+    Session,
+    SessionStore,
+};
 use axum::{
     extract::{self, State},
     http::{header::SET_COOKIE, HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     Json,
 };
-use pockety::{Pockety, PocketyUrl};
+use pockety::{models::PocketItem, Pockety, PocketyUrl};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -135,6 +140,25 @@ pub async fn get_access_token(
         access_token,
         session_id: session_data.session_id,
     };
+
+    Ok(TypedResponse {
+        body: Some(response),
+        ..Default::default()
+    })
+}
+
+#[derive(Serialize)]
+pub struct GetArticlesResponse {
+    articles: Vec<PocketItem>,
+}
+
+pub async fn get_articles(
+    State(pockety): State<Pockety>,
+) -> Result<GetArticlesResponse> {
+    let since = Utc::now() - Duration::days(7);
+    let articles = pockety.retrieve().since(since).execute().await?;
+
+    let response = GetArticlesResponse { articles };
 
     Ok(TypedResponse {
         body: Some(response),

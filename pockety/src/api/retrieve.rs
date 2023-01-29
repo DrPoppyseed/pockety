@@ -3,10 +3,6 @@ use crate::{
     models::{
         ContentType,
         DetailType,
-        ItemId,
-        ItemImage,
-        ItemStatus,
-        ItemVideo,
         PocketItem,
         Sort,
         State,
@@ -88,8 +84,8 @@ impl<'po> RetrieveHandler<'po> {
         self
     }
 
-    pub fn since(mut self, since: Timestamp) -> Self {
-        self.body.since = Some(since);
+    pub fn since(mut self, since: impl Into<Timestamp>) -> Self {
+        self.body.since = Some(since.into());
         self
     }
 

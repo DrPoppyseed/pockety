@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
@@ -11,6 +12,13 @@ pub struct Timestamp(pub i64);
 impl Timestamp {
     pub fn now() -> Self {
         Self(OffsetDateTime::now_utc().unix_timestamp())
+    }
+}
+
+impl From<DateTime<Utc>> for Timestamp {
+    fn from(date_time: DateTime<Utc>) -> Self {
+        let timestamp = date_time.timestamp();
+        Self(timestamp)
     }
 }
 
