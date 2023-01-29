@@ -1,7 +1,8 @@
-use std::convert::Infallible;
+use std::sync::Arc;
 
 use reqwest::{Client, StatusCode, Url};
 use serde::{de::DeserializeOwned, Serialize};
+use tokio::sync::Mutex;
 
 use crate::{
     api::{add::AddHandler, modify::ModifyHandler, retrieve::RetrieveHandler},
@@ -11,7 +12,7 @@ use crate::{
         GetRequestTokenRequest,
         GetRequestTokenResponse,
     },
-    error::{ApiError, Error, Error::Http, HttpError},
+    error::{Error, HttpError},
 };
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -55,8 +56,7 @@ impl std::fmt::Display for PocketyUrl {
 #[derive(Debug, Default, Clone)]
 pub struct Auth {
     pub(crate) consumer_key: String,
-    pub(crate) request_token: Option<String>,
-    pub(crate) access_token: Option<String>,
+    pub(crate) access_token: Arc<Mutex<Option<String>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -71,8 +71,7 @@ impl Pockety {
     pub fn new(consumer_key: &str, redirect_url: &str) -> Self {
         let auth = Auth {
             consumer_key: consumer_key.to_string(),
-            request_token: None,
-            access_token: None,
+            access_token: Arc::new(Mutex::new(None)),
         };
 
         Self {
@@ -123,15 +122,17 @@ impl Pockety {
                     .get("X-Error")
                     .map(|v| v.to_str().map(|v| v.to_string()))
                     .transpose()?;
-                Err(Http(http_error))
+                Err(Error::Http(http_error))
             }
         } else {
-            Err(Http(HttpError::new(StatusCode::INTERNAL_SERVER_ERROR)))
+            Err(Error::Http(HttpError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+            )))
         }
     }
 
     pub async fn get_request_token(
-        &mut self,
+        &self,
         state: Option<String>,
     ) -> Result<String, Error> {
         let body = GetRequestTokenRequest {
@@ -144,26 +145,18 @@ impl Pockety {
             .post::<_, GetRequestTokenResponse>("/oauth/request", Some(&body))
             .await?;
 
-        // TODO: consider how to store tokens in a more secure and responsible way
-        self.auth.request_token = Some(response.code.clone());
-
         // TODO: consider using domain primitives instead of strings
         Ok(response.code)
     }
 
     pub async fn get_access_token(
-        &mut self,
+        &self,
+        request_token: &str,
         state: Option<String>,
     ) -> Result<String, Error> {
-        let code = self
-            .auth
-            .request_token
-            .clone()
-            .ok_or(Error::Api(ApiError::MissingRequestToken))?;
-
         let body = GetAccessTokenRequest {
             consumer_key: self.auth.consumer_key.clone(),
-            code,
+            code: request_token.to_string(),
             state,
         };
 
@@ -171,7 +164,8 @@ impl Pockety {
             .post::<_, GetAccessTokenResponse>("/oauth/authorize", Some(&body))
             .await?;
 
-        self.auth.access_token = Some(response.access_token.clone());
+        let mut guard = self.auth.access_token.lock().await;
+        *guard = Some(response.access_token.clone());
 
         Ok(response.access_token)
     }

@@ -1,9 +1,22 @@
+use std::fmt::Display;
+
 #[derive(Debug)]
 pub enum Error {
     Http(HttpError),
     Api(ApiError),
     Json(String),
     Parse(String),
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Http(error) => write!(f, "Http error: {error:?}"),
+            Error::Api(error) => write!(f, "Api error: {error:?}"),
+            Error::Json(error) => write!(f, "Json error: {error:?}"),
+            Error::Parse(error) => write!(f, "Parse error: {error:?}"),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -30,7 +43,7 @@ pub enum ApiError {
 }
 
 impl From<reqwest::Error> for Error {
-    fn from(error: reqwest::Error) -> Self {
+    fn from(_: reqwest::Error) -> Self {
         Error::Http(HttpError::new(reqwest::StatusCode::INTERNAL_SERVER_ERROR))
     }
 }

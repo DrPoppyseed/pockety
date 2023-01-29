@@ -8,9 +8,11 @@ edition = "2021"
 axum = { version = "0.6.3", features = ["headers"] }
 async-session = "3.0.0"
 
-# cors 
 tower = "0.4.13"
-tower-http = { version = "0.3.5", features = ["cors", "timeout"] }
+tower-http = { version = "0.3.5", features = ["cors", "timeout", "trace"] }
+
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 
 serde = { version = "1.0.152", features = ["derive"] }
 tokio = { version = "1.24.2", features = ["full"] }

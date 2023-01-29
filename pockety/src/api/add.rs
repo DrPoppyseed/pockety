@@ -102,7 +102,9 @@ impl<'po> AddHandler<'po> {
     }
 
     pub async fn send(self) -> Result<AddResponse, Error> {
-        if let Some(access_token) = self.pockety.auth.access_token.clone() {
+        if let Some(ref access_token) =
+            *self.pockety.auth.access_token.lock().await
+        {
             let body = AddRequestBody {
                 consumer_key: self.pockety.auth.consumer_key.clone(),
                 access_token: access_token.clone(),

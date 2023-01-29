@@ -11,7 +11,8 @@
 
 pub mod api;
 pub mod auth;
-pub mod error;
+mod error;
+pub use error::{ApiError, Error, HttpError};
 pub mod models;
 
 mod pockety;

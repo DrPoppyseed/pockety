@@ -1,13 +1,12 @@
-import { Route, Routes, useLocation, useNavigate } from "@solidjs/router";
+import { Route, Routes } from "@solidjs/router";
 import axios from "axios";
 import {
-  createEffect,
   createSignal,
   Match,
   onMount,
   Show,
   Switch,
-  type Component,
+  Component,
 } from "solid-js";
 
 const FetchStatus = {
@@ -19,13 +18,14 @@ const FetchStatus = {
 type FetchStatusType = typeof FetchStatus[keyof typeof FetchStatus];
 
 const Comp: Component = () => {
-  const [data, setData] = createSignal<String | null>(null);
+  const [authUri, setAuthUri] = createSignal<String | null>(null);
 
   const onLoginClick = async () => {
     const result = await axios.post("http://localhost:8080/auth/pocket");
 
     if (result.status === 200) {
-      setData(result.data);
+      localStorage.setItem("token", result.data.requestToken); 
+      setAuthUri(result.data.authUri);
     }
   };
 
@@ -39,14 +39,14 @@ const Comp: Component = () => {
     >
       <h1>Auth Example</h1>
       <button onClick={() => onLoginClick()}>Login with Pocket</button>
-      <Show when={data()}>
+      <Show when={authUri()}>
         <a
           style={{
-            "margin-bottom": "1rem",
+            "margin-top": "1rem",
           }}
-          href={data().toString()}
+          href={authUri().toString()}
         >
-          Grant permissions for Pocket
+          Grant permissions for Pocket 
         </a>
       </Show>
     </div>
@@ -54,7 +54,7 @@ const Comp: Component = () => {
 };
 
 const Auth: Component = () => {
-  const navigate = useNavigate();
+  const [token, setToken] = createSignal<string | null>(null);
   const [fetchStatus, setFetchStatus] = createSignal<FetchStatusType>(
     FetchStatus.Idle
   );
@@ -62,21 +62,16 @@ const Auth: Component = () => {
   onMount(async () => {
     setFetchStatus(FetchStatus.Fetching);
 
-    const result = await axios.post("http://localhost:8080/auth/authorize");
+    const requestToken = localStorage.getItem("token");
+    setToken(requestToken)
+    const result = await axios.post("http://localhost:8080/auth/authorize", {
+      requestToken
+    });
 
     if (result.status === 200) {
       setFetchStatus(FetchStatus.Success);
     } else {
       setFetchStatus(FetchStatus.Error);
-    }
-  });
-
-  createEffect(() => {
-    if (fetchStatus() === FetchStatus.Success) {
-      console.log("success");
-      navigate("/");
-    } else if (fetchStatus() === FetchStatus.Error) {
-      console.log("error");
     }
   });
 
@@ -90,6 +85,15 @@ const Auth: Component = () => {
       </Match>
       <Match when={fetchStatus() === FetchStatus.Success}>
         <h1>Authenticated</h1>
+        <p>token: {token().toString()}</p>
+        <a
+          style={{
+            "margin-top": "1rem",
+          }}
+          href="/"
+        >
+          Go back
+        </a>
       </Match>
     </Switch>
   );
@@ -97,7 +101,7 @@ const Auth: Component = () => {
 
 const App: Component = () => {
   return (
-    <Routes>
+    <Routes> 
       <Route path="/" component={Comp} />
       <Route path="/login" component={Auth} />
     </Routes>

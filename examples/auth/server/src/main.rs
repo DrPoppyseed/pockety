@@ -1,23 +1,26 @@
 use std::{env, net::SocketAddr};
 
 use async_session::{async_trait, MemoryStore, Session, SessionStore};
+use error::Error;
 use pockety::{Pockety, PocketyUrl};
 
 use axum::{
     extract::{
+        self,
         rejection::TypedHeaderRejectionReason,
         FromRef,
         FromRequestParts,
-        State, FromRequest,
+        State,
     },
     headers,
     http::{
-        header::{self, SET_COOKIE},
+        header::{COOKIE, SET_COOKIE},
         request::Parts,
         HeaderMap,
         Method,
+        StatusCode,
     },
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Response},
     routing::{get, post},
     Json,
     RequestPartsExt,
@@ -25,11 +28,16 @@ use axum::{
     Server,
     TypedHeader,
 };
-use rand::{thread_rng, RngCore};
+use rand::{distributions::Alphanumeric, thread_rng, Rng, RngCore};
 use serde::{Deserialize, Serialize};
-use tower_http::cors::CorsLayer;
+use tower_http::{cors::CorsLayer, trace};
+use tracing::Level;
 
-static COOKIE_NAME: &str = "SESSION";
+mod error;
+
+static COOKIE_NAME: &str = "POCKETY_AUTH";
+
+type Result<R> = std::result::Result<TypedResponse<R>, Error>;
 
 #[derive(Debug, Clone)]
 struct AppState {
@@ -37,8 +45,62 @@ struct AppState {
     store: MemoryStore,
 }
 
+impl FromRef<AppState> for Pockety {
+    fn from_ref(state: &AppState) -> Self {
+        state.pockety.clone()
+    }
+}
+
+impl FromRef<AppState> for MemoryStore {
+    fn from_ref(state: &AppState) -> Self {
+        state.store.clone()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TypedResponse<B>
+where
+    B: Serialize,
+{
+    body: Option<B>,
+    headers: Option<HeaderMap>,
+    status_code: StatusCode,
+}
+
+impl<B> Default for TypedResponse<B>
+where
+    B: Serialize,
+{
+    fn default() -> Self {
+        Self {
+            body: None,
+            headers: None,
+            status_code: StatusCode::OK,
+        }
+    }
+}
+
+impl<B> IntoResponse for TypedResponse<B>
+where
+    B: Serialize,
+{
+    fn into_response(self) -> Response {
+        let mut response = Json(self.body).into_response();
+        if let Some(headers) = self.headers {
+            *response.headers_mut() = headers;
+        }
+        *response.status_mut() = self.status_code;
+        response
+    }
+}
+
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_target(false)
+        .compact()
+        .init();
+
     let store = MemoryStore::new();
     let mut secret = [0; 64];
     thread_rng()
@@ -50,7 +112,8 @@ async fn main() {
             "https://getpocket.com".parse().unwrap(),
         ])
         .allow_headers(["content-type".parse().unwrap()])
-        .allow_methods([Method::GET, Method::POST]);
+        .allow_methods([Method::GET, Method::POST])
+        .allow_credentials(true);
 
     let pockety = Pockety::new(
         &env::var("POCKET_CONSUMER_KEY").expect("Missing POCKET_CONSUMER_KEY"),
@@ -64,13 +127,23 @@ async fn main() {
         .route("/auth/pocket", post(get_request_token))
         .route("/auth/authorize", post(get_access_token))
         .layer(cors_layer)
+        .layer(
+            trace::TraceLayer::new_for_http()
+                .make_span_with(
+                    trace::DefaultMakeSpan::new().level(Level::INFO),
+                )
+                .on_response(
+                    trace::DefaultOnResponse::new().level(Level::INFO),
+                ),
+        )
         .with_state(app_state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
+    tracing::info!("Listening on {addr}");
     Server::bind(&addr)
         .serve(app.into_make_service())
         .await
-        .unwrap();
+        .expect("failed to launch server");
 }
 
 async fn index() -> impl IntoResponse {
@@ -80,31 +153,20 @@ async fn index() -> impl IntoResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionData {
     session_id: String,
-    request_token: String,
-    access_token: Option<String>,
+    access_token: String,
 }
 
 #[derive(Serialize)]
-pub struct GetRequestTokenResponse {
+#[serde(rename_all = "camelCase")]
+struct GetRequestTokenResponse {
     request_token: String,
     auth_uri: String,
-    session_id: String,
 }
 
 async fn get_request_token(
-    State(store): State<MemoryStore>,
-    State(mut pockety): State<Pockety>,
-) -> impl IntoResponse {
-    let request_token = pockety
-        .get_request_token(None)
-        .await
-        .expect("Failed to get request token");
-
-    let mut session_id = [0; 16];
-    thread_rng()
-        .try_fill_bytes(&mut session_id)
-        .expect("Failed to generate session id");
-    let session_id: String = String::from_utf8(session_id.to_vec()).unwrap();
+    State(pockety): State<Pockety>,
+) -> Result<GetRequestTokenResponse> {
+    let request_token = pockety.get_request_token(None).await?;
 
     let auth_uri = format!(
         "{}?request_token={request_token}&redirect_uri={}",
@@ -113,44 +175,73 @@ async fn get_request_token(
     );
 
     let response = GetRequestTokenResponse {
-        request_token: request_token.clone(),
-        auth_uri,
-        session_id: session_id.clone(),
-    };
-
-    let session_data = SessionData {
-        session_id,
         request_token,
-        access_token: None,
+        auth_uri,
     };
 
-    let mut session = Session::new();
-    session.insert("session", &session_data).unwrap();
+    Ok(TypedResponse {
+        body: Some(response),
+        ..Default::default()
+    })
+}
 
-    let cookie = store.store_session(session).await.unwrap().unwrap();
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAccessTokenResponse {
+    access_token: String,
+    session_id: String,
+}
 
-    let mut headers = HeaderMap::new();
-    headers.insert(SET_COOKIE, cookie.parse().unwrap());
-
-    (headers, Json(response)).into_response()
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAccessTokenRequest {
+    request_token: String,
 }
 
 async fn get_access_token(
     State(store): State<MemoryStore>,
-    State(mut pockety): State<Pockety>,
-) -> impl IntoResponse {
-    pockety
-        .get_access_token(None)
+    State(pockety): State<Pockety>,
+    extract::Json(request): extract::Json<GetAccessTokenRequest>,
+) -> Result<GetAccessTokenResponse> {
+    let access_token = pockety
+        .get_access_token(&request.request_token, None)
+        .await?;
+
+    let session_id: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(32)
+        .map(char::from)
+        .collect();
+
+    let session_data = SessionData {
+        session_id,
+        access_token: access_token.clone(),
+    };
+
+    let mut session = Session::new();
+    session.insert("session", &session_data)?;
+
+    let cookie = store
+        .store_session(session)
         .await
-        .expect("Failed to get access token");
-}
+        .ok()
+        .flatten()
+        .ok_or(Error::Cookie("Failed to store session".to_string()))?;
+    let cookie =
+        format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Path=/; HttpOnly");
 
-struct AuthRedirect;
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, cookie.parse().unwrap());
 
-impl IntoResponse for AuthRedirect {
-    fn into_response(self) -> Response {
-        Redirect::temporary("/auth/pocket").into_response()
-    }
+    let response = GetAccessTokenResponse {
+        access_token,
+        session_id: session_data.session_id,
+    };
+
+    Ok(TypedResponse {
+        body: Some(response),
+        ..Default::default()
+    })
 }
 
 #[async_trait]
@@ -159,40 +250,45 @@ where
     MemoryStore: FromRef<S>,
     S: Send + Sync,
 {
-    type Rejection = AuthRedirect;
+    type Rejection = Error;
 
     async fn from_request_parts(
         parts: &mut Parts,
         state: &S,
-    ) -> Result<Self, Self::Rejection> {
+    ) -> std::result::Result<Self, Self::Rejection> {
         let store = MemoryStore::from_ref(state);
 
         let cookies = parts
             .extract::<TypedHeader<headers::Cookie>>()
             .await
             .map_err(|e| match *e.name() {
-                header::COOKIE => match e.reason() {
-                    TypedHeaderRejectionReason::Missing => AuthRedirect,
-                    _ => {
-                        panic!("unexpected error getting Cookie header(s): {e}")
+                COOKIE => match e.reason() {
+                    TypedHeaderRejectionReason::Missing => {
+                        Error::Cookie("missing Cookie header".to_string())
                     }
+                    _ => Error::Cookie(
+                        "unexpected error getting Cookie header(s): {e}"
+                            .to_string(),
+                    ),
                 },
-                _ => panic!("unexpected error getting cookies: {e}"),
+                _ => Error::Cookie(
+                    "unexpected error getting cookies: {e}".to_string(),
+                ),
             })?;
-        let session_cookie = cookies.get(COOKIE_NAME).ok_or(AuthRedirect)?;
+
+        let session_cookie = cookies
+            .get(COOKIE_NAME)
+            .ok_or(Error::Cookie("missing cookie".to_string()))?;
 
         let session = store
             .load_session(session_cookie.to_string())
             .await
-            .unwrap()
-            .ok_or(AuthRedirect)?;
+            .ok()
+            .flatten()
+            .ok_or(Error::Cookie("failed to load session".to_string()))?;
 
-        let session =
-            session.get::<SessionData>("session").ok_or(AuthRedirect)?;
-
-        Ok(session)
+        session
+            .get::<SessionData>("session")
+            .ok_or(Error::Cookie("session not found".to_string()))
     }
 }
-
-#[async_trait]
-impl<P> FromRe
