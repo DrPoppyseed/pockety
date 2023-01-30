@@ -206,17 +206,21 @@ pub struct PocketItem {
     /// The actual url that was saved with the item. This url should be used if
     /// the user wants to view the item.
     pub given_url: String,
-    /// The final url of the item. For examples if the item was a shortened
-    /// bit.ly link, this will be the actual article the url linked to.
-    pub resolved_url: String,
     /// The title that was saved along with the item.
     pub given_title: String,
-    /// The title that Pocket found for the item when it was parsed
-    pub resolved_title: String,
     /// 0 or 1 - 1 If the item is favorited
     pub favorite: bool,
     /// 0, 1, 2 - 1 if the item is archived - 2 if the item should be deleted
     pub status: ItemStatus,
+    pub time_added: Option<Timestamp>,
+    pub time_updated: Option<Timestamp>,
+    pub time_read: Option<Timestamp>,
+    pub time_favorited: Option<Timestamp>,
+    /// The final url of the item. For examples if the item was a shortened
+    /// bit.ly link, this will be the actual article the url linked to.
+    pub resolved_url: String,
+    /// The title that Pocket found for the item when it was parsed
+    pub resolved_title: String,
     /// The first few lines of the item (articles only)
     pub excerpt: String,
     /// 0 or 1 - 1 if the item is an article

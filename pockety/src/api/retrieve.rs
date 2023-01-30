@@ -33,6 +33,9 @@ pub struct RetrieveRequestBody {
 pub struct RetrieveResponse {
     pub list: Vec<PocketItem>,
     pub status: u16,
+    pub complete: u16,
+    pub error: Option<String>,
+    pub since: Option<Timestamp>,
 }
 
 #[derive(Debug)]
