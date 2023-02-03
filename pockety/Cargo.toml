@@ -13,6 +13,6 @@ serde = { version = "1", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 time = "0.3"
-async-trait = "0.1.61"
+async-trait = "0.1.64"
 url = "2.3.1"
 chrono = "0.4.23"

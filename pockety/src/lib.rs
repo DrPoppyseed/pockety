@@ -10,7 +10,6 @@
 )]
 
 pub mod api;
-pub mod auth;
 mod error;
 pub use error::{ApiError, Error, HttpError};
 pub mod models;

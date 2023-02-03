@@ -1,17 +1,11 @@
 use std::sync::Arc;
 
 use reqwest::{Client, StatusCode, Url};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use crate::{
     api::{add::AddHandler, modify::ModifyHandler, retrieve::RetrieveHandler},
-    auth::{
-        GetAccessTokenRequest,
-        GetAccessTokenResponse,
-        GetRequestTokenRequest,
-        GetRequestTokenResponse,
-    },
     error::{Error, HttpError},
 };
 
@@ -51,6 +45,35 @@ impl std::fmt::Display for PocketyUrl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
     }
+}
+
+#[derive(Serialize, Debug)]
+pub struct GetRequestTokenRequest {
+    pub consumer_key: String,
+    pub redirect_uri: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GetRequestTokenResponse {
+    pub code: String,
+    pub state: Option<String>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct GetAccessTokenRequest {
+    pub consumer_key: String,
+    pub code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GetAccessTokenResponse {
+    pub access_token: String,
+    pub username: String,
+    pub state: Option<String>,
 }
 
 #[derive(Debug, Default, Clone)]
