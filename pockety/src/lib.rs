@@ -60,15 +60,15 @@ pub struct Pockety {
 // TODO: consider if we even need to use `Url` here in the first place
 // If reqwest is accepting string slices for urls, I don't see why we can't as well.
 impl Pockety {
-    const BASE_URL: &str = "https://getpocket.com/v3";
-    const AUTHORIZE_URL: &str = "https://getpocket.com/auth/authorize";
+    pub const BASE_URL: &str = "https://getpocket.com/v3";
+    pub const AUTHORIZE_URL: &str = "https://getpocket.com/auth/authorize";
 
     pub fn new(
         consumer_key: String,
         redirect_url: impl TryInto<Url>,
     ) -> Result<Self, Error> {
         let base_url = Url::try_from(Self::BASE_URL)?;
-        let redirect_url = redirect_url.try_into().map_err(|e| {
+        let redirect_url = redirect_url.try_into().map_err(|_| {
             Error::Parse(
                 "failed to parse redirect_url param to Url".to_string(),
             )
@@ -83,14 +83,14 @@ impl Pockety {
         })
     }
 
-    pub async fn post<Body, Res>(
+    pub async fn post<T, U>(
         &self,
         relative_url: &str,
-        body: Option<&Body>,
-    ) -> Result<Res, Error>
+        body: Option<&T>,
+    ) -> Result<U, Error>
     where
-        Body: Serialize,
-        Res: DeserializeOwned,
+        T: Serialize,
+        U: DeserializeOwned,
     {
         let url = format!("{}{relative_url}", self.base_url);
 
@@ -109,8 +109,22 @@ impl Pockety {
 
         match self.client.execute(request).await {
             Ok(response) => {
+                println!("[pockety] response: {:#?}", response);
                 if response.status().is_success() {
-                    response.json().map_err(Error::from).await
+                    response
+                        .json::<serde_json::Value>()
+                        .map_err(Error::from)
+                        .and_then(|json| async {
+                            println!(
+                                "[pockety] raw response json: {:#?}",
+                                json
+                            );
+                            serde_json::from_value::<U>(json).map_err(|e| {
+                                println!("[pockety] error: {:#?}", e);
+                                Error::Parse(e.to_string())
+                            })
+                        })
+                        .await
                 } else {
                     let mut http_error =
                         HttpError::new().status_code(response.status());

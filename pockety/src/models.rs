@@ -38,12 +38,15 @@ impl TryFrom<i64> for Timestamp {
     }
 }
 
+// TODO: not all timestamps are typed the same.
+// we might want a raw response model in-between the fully typed structs?
 impl<'de> Deserialize<'de> for Timestamp {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        i64::deserialize(deserializer)
+        String::deserialize(deserializer)
+            .and_then(|op| op.parse::<i64>().map_err(de::Error::custom))
             .and_then(|op| Timestamp::try_from(op).map_err(de::Error::custom))
     }
 }
@@ -79,15 +82,15 @@ impl Serialize for Tags {
     }
 }
 
-#[derive(Copy, Debug, Clone, PartialEq, Eq)]
-pub struct ItemId(pub u32);
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ItemId(pub String);
 
 impl<'de> Deserialize<'de> for ItemId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let id = u32::deserialize(deserializer)?;
+        let id = String::deserialize(deserializer)?;
         Ok(Self(id))
     }
 }
@@ -106,8 +109,8 @@ pub struct ItemImage {
     pub item_id: ItemId,
     pub image_id: ItemId,
     pub src: String,
-    pub width: u32,
-    pub height: u32,
+    pub width: String,
+    pub height: String,
     pub caption: String,
     pub credit: String,
 }
@@ -117,9 +120,9 @@ pub struct ItemVideo {
     pub item_id: ItemId,
     pub video_id: ItemId,
     pub src: String,
-    pub width: u32,
-    pub height: u32,
-    pub length: Option<u32>,
+    pub width: String,
+    pub height: String,
+    pub length: Option<String>,
     pub vid: String,
 }
 
@@ -214,13 +217,19 @@ pub struct PocketItem {
     /// The title that was saved along with the item.
     pub given_title: String,
     /// 0 or 1 - 1 If the item is favorited
-    pub favorite: bool,
+    pub favorite: String,
     /// 0, 1, 2 - 1 if the item is archived - 2 if the item should be deleted
     pub status: ItemStatus,
+    // TODO: add description
     pub time_added: Option<Timestamp>,
+    // TODO: add description
     pub time_updated: Option<Timestamp>,
+    // TODO: add description
     pub time_read: Option<Timestamp>,
+    // TODO: add description
     pub time_favorited: Option<Timestamp>,
+    // TODO: add description
+    pub sort_id: Option<u32>,
     /// The final url of the item. For examples if the item was a shortened
     /// bit.ly link, this will be the actual article the url linked to.
     pub resolved_url: String,
@@ -229,19 +238,31 @@ pub struct PocketItem {
     /// The first few lines of the item (articles only)
     pub excerpt: String,
     /// 0 or 1 - 1 if the item is an article
-    pub is_article: bool,
+    pub is_article: String,
+    // TODO: add description
+    pub is_index: String,
     /// 0, 1, or 2 - 1 if the item has images in it - 2 if the item is an image
     pub has_image: ItemHas,
     /// 0, 1, or 2 - 1 if the item has videos in it - 2 if the item is a video
     pub has_video: ItemHas,
     /// How many words are in the article
-    pub word_count: u32,
+    pub word_count: String,
     /// A JSON object of the user tags associated with the item
-    pub tags: String,
+    pub tags: Option<String>,
     /// A JSON object listing all of the authors associated with the item
-    pub authors: String,
+    pub authors: Option<String>,
     /// A JSON object listing all of the images associated with the item
     pub images: Option<Vec<ItemImage>>,
     /// A JSON object listing all of the videos associated with the item
     pub videos: Option<Vec<ItemVideo>>,
+    // TODO: add description
+    pub lang: Option<String>,
+    // TODO: add description
+    pub time_to_read: Option<u32>,
+    // TODO: add description
+    pub listen_duration_estimate: Option<u32>,
+    // TODO: add description
+    pub top_image_url: Option<String>,
+    // TODO: add description
+    pub domain_metadata: Option<serde_json::Value>,
 }

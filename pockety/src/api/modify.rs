@@ -34,9 +34,7 @@ pub struct Add {
     pub url: Option<String>,
 }
 
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, Copy, Clone, PartialEq, Eq,
-)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "archive")]
 pub struct Archive {
     pub item_id: ItemId,
@@ -55,9 +53,7 @@ pub enum UpdateName {
     Delete,
 }
 
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, Copy, Clone, PartialEq, Eq,
-)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Update {
     pub action: UpdateName,
     pub item_id: ItemId,
@@ -88,9 +84,7 @@ pub struct TagsRemove {
     pub time: Option<Timestamp>,
 }
 
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, Copy, Clone, PartialEq, Eq,
-)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_clear")]
 pub struct TagsClear {
     pub item_id: ItemId,

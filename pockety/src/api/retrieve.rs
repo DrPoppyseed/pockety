@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use futures::TryFutureExt;
 
 use crate::{
@@ -33,11 +35,15 @@ pub struct RetrieveRequestBody {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
 pub struct RetrieveResponse {
-    pub list: Vec<PocketItem>,
+    pub list: HashMap<String, PocketItem>,
     pub status: u16,
     pub complete: u16,
     pub error: Option<String>,
-    pub since: Option<Timestamp>,
+    pub since: Option<i64>,
+    // search_meta isn't documented in the API docs, but it's in the response.
+    // we're not too sure what we want to do with this, so we're just going to
+    // leave it as a serde_json::Value for now.
+    pub search_meta: Option<serde_json::Value>,
 }
 
 #[derive(Debug)]
@@ -122,7 +128,7 @@ impl<'po> RetrieveHandler<'po> {
 
         self.pockety
             .post::<RetrieveRequestBody, RetrieveResponse>("/get", Some(&body))
-            .map_ok(|res| res.list)
+            .map_ok(|res| res.list.into_values().collect())
             .await
     }
 }
