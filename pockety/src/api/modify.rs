@@ -1,10 +1,12 @@
+use futures::TryFutureExt;
+
 use crate::{
-    error::{ApiError::MissingAccessToken, Error},
+    error::Error,
     models::{ItemId, Tags, Timestamp},
-    pockety::Pockety,
+    Pockety,
 };
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
 pub enum PocketAction {
     Add(Add),
@@ -21,7 +23,7 @@ pub enum PocketAction {
     TagDelete(TagDelete),
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "add")]
 pub struct Add {
     pub item_id: ItemId,
@@ -62,7 +64,7 @@ pub struct Update {
     pub time: Timestamp,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_add")]
 pub struct TagsAdd {
     pub item_id: ItemId,
@@ -70,7 +72,7 @@ pub struct TagsAdd {
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_replace")]
 pub struct TagsReplace {
     item_id: ItemId,
@@ -95,7 +97,7 @@ pub struct TagsClear {
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tag_rename")]
 pub struct TagRename {
     pub old_tag: String,
@@ -103,7 +105,7 @@ pub struct TagRename {
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tag_delete")]
 pub struct TagDelete {
     pub tag: String,
@@ -126,37 +128,36 @@ pub struct ModifyResponse {
 #[derive(Debug)]
 pub struct ModifyHandler<'po> {
     pockety: &'po Pockety,
-    actions: Vec<PocketAction>,
+    body: ModifyRequestBody,
 }
 
 impl<'po> ModifyHandler<'po> {
     pub fn new(pockety: &'po Pockety) -> Self {
         Self {
             pockety,
-            actions: Vec::new(),
+            body: Default::default(),
         }
     }
 
-    pub fn push(&mut self, action: PocketAction) {
-        self.actions.push(action);
+    pub fn access_token(mut self, access_token: String) -> Self {
+        self.body.access_token = access_token;
+        self
+    }
+
+    pub fn push(mut self, action: PocketAction) -> Self {
+        self.body.actions = [self.body.actions, vec![action]].concat();
+        self
     }
 
     pub async fn send(self) -> Result<Vec<bool>, Error> {
-        if let Some(ref access_token) =
-            *self.pockety.auth.access_token.lock().await
-        {
-            let body = ModifyRequestBody {
-                consumer_key: self.pockety.auth.consumer_key.clone(),
-                access_token: access_token.clone(),
-                actions: self.actions,
-            };
+        let body = ModifyRequestBody {
+            consumer_key: self.pockety.consumer_key.clone(),
+            ..self.body
+        };
 
-            let res: ModifyResponse =
-                self.pockety.post("/send", Some(&body)).await?;
-
-            Ok(res.action_results)
-        } else {
-            Err(Error::Api(MissingAccessToken))
-        }
+        self.pockety
+            .post::<ModifyRequestBody, ModifyResponse>("/send", Some(&body))
+            .map_ok(|res| res.action_results)
+            .await
     }
 }

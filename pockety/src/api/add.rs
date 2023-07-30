@@ -1,7 +1,7 @@
 use crate::{
-    error::{ApiError::MissingAccessToken, Error},
+    error::Error,
     models::{ItemHas, ItemId, ItemImage, ItemVideo, Tags, Timestamp},
-    pockety::Pockety,
+    Pockety,
 };
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
@@ -81,13 +81,18 @@ impl<'po> AddHandler<'po> {
         }
     }
 
-    pub fn url(mut self, url: &str) -> Self {
-        self.body.url = url.to_string();
+    pub fn access_token(mut self, access_token: String) -> Self {
+        self.body.access_token = access_token;
         self
     }
 
-    pub fn title(mut self, title: &str) -> Self {
-        self.body.title = Some(title.to_string());
+    pub fn url(mut self, url: String) -> Self {
+        self.body.url = url;
+        self
+    }
+
+    pub fn title(mut self, title: String) -> Self {
+        self.body.title = Some(title);
         self
     }
 
@@ -96,30 +101,19 @@ impl<'po> AddHandler<'po> {
         self
     }
 
-    pub fn tweet_id(mut self, tweet_id: &str) -> Self {
-        self.body.tweet_id = Some(tweet_id.to_string());
+    pub fn tweet_id(mut self, tweet_id: String) -> Self {
+        self.body.tweet_id = Some(tweet_id);
         self
     }
 
     pub async fn send(self) -> Result<AddResponse, Error> {
-        if let Some(ref access_token) =
-            *self.pockety.auth.access_token.lock().await
-        {
-            let body = AddRequestBody {
-                consumer_key: self.pockety.auth.consumer_key.clone(),
-                access_token: access_token.clone(),
-                url: self.body.url,
-                title: self.body.title,
-                tags: self.body.tags,
-                tweet_id: self.body.tweet_id,
-            };
+        let body = AddRequestBody {
+            consumer_key: self.pockety.consumer_key.clone(),
+            ..self.body
+        };
 
-            let res: AddResponse =
-                self.pockety.post("/send", Some(&body)).await?;
-
-            Ok(res)
-        } else {
-            Err(Error::Api(MissingAccessToken))
-        }
+        self.pockety
+            .post::<AddRequestBody, AddResponse>("/send", Some(&body))
+            .await
     }
 }

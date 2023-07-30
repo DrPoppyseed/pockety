@@ -27,11 +27,26 @@ pub struct HttpError {
 }
 
 impl HttpError {
-    pub fn new(status: reqwest::StatusCode) -> Self {
+    pub fn new() -> Self {
         HttpError {
-            status,
+            status: reqwest::StatusCode::INTERNAL_SERVER_ERROR,
             error_code: None,
             error_message: None,
+        }
+    }
+
+    pub fn status_code(self, status: reqwest::StatusCode) -> Self {
+        Self { status, ..self }
+    }
+
+    pub fn error_code(self, error_code: Option<String>) -> Self {
+        Self { error_code, ..self }
+    }
+
+    pub fn error_message(self, error_message: Option<String>) -> Self {
+        Self {
+            error_message,
+            ..self
         }
     }
 }
@@ -43,8 +58,8 @@ pub enum ApiError {
 }
 
 impl From<reqwest::Error> for Error {
-    fn from(_: reqwest::Error) -> Self {
-        Error::Http(HttpError::new(reqwest::StatusCode::INTERNAL_SERVER_ERROR))
+    fn from(error: reqwest::Error) -> Self {
+        Error::Http(HttpError::new().error_message(Some(error.to_string())))
     }
 }
 

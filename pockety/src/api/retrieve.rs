@@ -1,3 +1,5 @@
+use futures::TryFutureExt;
+
 use crate::{
     error,
     models::{
@@ -9,7 +11,7 @@ use crate::{
         Tag,
         Timestamp,
     },
-    pockety::Pockety,
+    Pockety,
 };
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
@@ -52,13 +54,18 @@ impl<'po> RetrieveHandler<'po> {
         }
     }
 
-    pub fn search(mut self, search: &str) -> Self {
-        self.body.search = Some(search.to_string());
+    pub fn access_token(mut self, access_token: String) -> Self {
+        self.body.access_token = access_token;
         self
     }
 
-    pub fn domain(mut self, domain: &str) -> Self {
-        self.body.domain = Some(domain.to_string());
+    pub fn search(mut self, search: String) -> Self {
+        self.body.search = Some(search);
+        self
+    }
+
+    pub fn domain(mut self, domain: String) -> Self {
+        self.body.domain = Some(domain);
         self
     }
 
@@ -108,8 +115,14 @@ impl<'po> RetrieveHandler<'po> {
     }
 
     pub async fn execute(self) -> Result<Vec<PocketItem>, error::Error> {
-        let response: RetrieveResponse =
-            self.pockety.post("/get", Some(&self.body)).await?;
-        Ok(response.list)
+        let body = RetrieveRequestBody {
+            consumer_key: self.pockety.consumer_key.clone(),
+            ..self.body
+        };
+
+        self.pockety
+            .post::<RetrieveRequestBody, RetrieveResponse>("/get", Some(&body))
+            .map_ok(|res| res.list)
+            .await
     }
 }
