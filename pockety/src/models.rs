@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use crate::error;
@@ -26,7 +26,12 @@ impl TryFrom<i64> for Timestamp {
     type Error = error::Error;
 
     fn try_from(timestamp: i64) -> Result<Self, Self::Error> {
-        let date_time = OffsetDateTime::from_unix_timestamp(timestamp).unwrap();
+        let date_time = OffsetDateTime::from_unix_timestamp(timestamp)
+            .map_err(|e| {
+                Self::Error::Parse(format!(
+                    "failed to parse timestamp to datetime. error: {e:?}",
+                ))
+            })?;
         let timestamp = date_time.unix_timestamp();
 
         Ok(Self(timestamp))
@@ -39,7 +44,7 @@ impl<'de> Deserialize<'de> for Timestamp {
         D: serde::Deserializer<'de>,
     {
         i64::deserialize(deserializer)
-            .map(|op| Timestamp::try_from(op).unwrap())
+            .and_then(|op| Timestamp::try_from(op).map_err(de::Error::custom))
     }
 }
 

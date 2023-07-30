@@ -10,6 +10,7 @@
 )]
 
 use api::{add::AddHandler, modify::ModifyHandler, retrieve::RetrieveHandler};
+use futures::TryFutureExt;
 use reqwest::Client;
 use serde::{self, de::DeserializeOwned, Deserialize, Serialize};
 pub mod api;
@@ -18,44 +19,6 @@ pub use error::{ApiError, Error, HttpError};
 pub mod models;
 pub use reqwest;
 use url::Url;
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct PocketyUrl(Inner);
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-enum Inner {
-    Base,
-    Authorize,
-}
-
-impl PocketyUrl {
-    pub const BASE: PocketyUrl = PocketyUrl(Inner::Base);
-
-    pub const AUTHORIZE: PocketyUrl = PocketyUrl(Inner::Authorize);
-
-    pub fn as_str(&self) -> &str {
-        match self.0 {
-            Inner::Base => "https://getpocket.com/v3",
-            Inner::Authorize => "https://getpocket.com/auth/authorize",
-        }
-    }
-
-    pub fn as_url(&self) -> Url {
-        Url::parse(self.as_str()).unwrap()
-    }
-}
-
-impl Default for PocketyUrl {
-    fn default() -> Self {
-        Self::BASE
-    }
-}
-
-impl std::fmt::Display for PocketyUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_str())
-    }
-}
 
 #[derive(Serialize, Debug, Clone)]
 pub struct GetRequestTokenRequest {
@@ -94,14 +57,30 @@ pub struct Pockety {
     pub client: Client,
 }
 
+// TODO: consider if we even need to use `Url` here in the first place
+// If reqwest is accepting string slices for urls, I don't see why we can't as well.
 impl Pockety {
-    pub fn new(consumer_key: String, redirect_url: &str) -> Self {
-        Self {
-            base_url: PocketyUrl::BASE.as_url(),
-            redirect_url: Url::parse(redirect_url).unwrap(),
+    const BASE_URL: &str = "https://getpocket.com/v3";
+    const AUTHORIZE_URL: &str = "https://getpocket.com/auth/authorize";
+
+    pub fn new(
+        consumer_key: String,
+        redirect_url: impl TryInto<Url>,
+    ) -> Result<Self, Error> {
+        let base_url = Url::try_from(Self::BASE_URL)?;
+        let redirect_url = redirect_url.try_into().map_err(|e| {
+            Error::Parse(
+                "failed to parse redirect_url param to Url".to_string(),
+            )
+        })?;
+        let client = Client::new();
+
+        Ok(Self {
+            base_url,
+            redirect_url,
             consumer_key,
-            client: Client::new(),
-        }
+            client,
+        })
     }
 
     pub async fn post<Body, Res>(
@@ -113,7 +92,7 @@ impl Pockety {
         Body: Serialize,
         Res: DeserializeOwned,
     {
-        let url = format!("{base_url}{relative_url}", base_url = self.base_url);
+        let url = format!("{}{relative_url}", self.base_url);
 
         let request = self
             .client
@@ -131,8 +110,7 @@ impl Pockety {
         match self.client.execute(request).await {
             Ok(response) => {
                 if response.status().is_success() {
-                    let res = response.json().await?;
-                    Ok(res)
+                    response.json().map_err(Error::from).await
                 } else {
                     let mut http_error =
                         HttpError::new().status_code(response.status());
@@ -173,14 +151,14 @@ impl Pockety {
     // TODO: Type from String to impl Into<String>
     pub async fn get_access_token(
         &self,
-        request_token: String,
+        request_token: impl Into<String>,
         state: Option<String>,
     ) -> Result<GetAccessTokenResponse, Error> {
         self.post(
             "/oauth/authorize",
             Some(&GetAccessTokenRequest {
                 consumer_key: self.consumer_key.clone(),
-                code: request_token,
+                code: request_token.into(),
                 state,
             }),
         )

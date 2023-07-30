@@ -19,7 +19,7 @@ impl Display for Error {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct HttpError {
     pub status: reqwest::StatusCode,
     pub error_code: Option<String>,
@@ -30,8 +30,7 @@ impl HttpError {
     pub fn new() -> Self {
         HttpError {
             status: reqwest::StatusCode::INTERNAL_SERVER_ERROR,
-            error_code: None,
-            error_message: None,
+            ..Default::default()
         }
     }
 
