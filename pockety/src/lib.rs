@@ -38,15 +38,12 @@ pub struct GetRequestTokenResponse {
 pub struct GetAccessTokenRequest {
     pub consumer_key: String,
     pub code: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub state: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GetAccessTokenResponse {
     pub access_token: String,
     pub username: String,
-    pub state: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -162,18 +159,15 @@ impl Pockety {
         .await
     }
 
-    // TODO: Type from String to impl Into<String>
     pub async fn get_access_token(
         &self,
         request_token: impl Into<String>,
-        state: Option<String>,
     ) -> Result<GetAccessTokenResponse, Error> {
         self.post(
             "/oauth/authorize",
             Some(&GetAccessTokenRequest {
                 consumer_key: self.consumer_key.clone(),
                 code: request_token.into(),
-                state,
             }),
         )
         .await

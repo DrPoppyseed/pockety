@@ -1,4 +1,3 @@
 [workspace]
-members = [
-    "pockety",
-]
+resolver = "2"
+members = ["pockety"]
