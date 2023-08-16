@@ -106,20 +106,13 @@ impl Pockety {
 
         match self.client.execute(request).await {
             Ok(response) => {
-                println!("[pockety] response: {:#?}", response);
                 if response.status().is_success() {
                     response
                         .json::<serde_json::Value>()
                         .map_err(Error::from)
                         .and_then(|json| async {
-                            println!(
-                                "[pockety] raw response json: {:#?}",
-                                json
-                            );
-                            serde_json::from_value::<U>(json).map_err(|e| {
-                                println!("[pockety] error: {:#?}", e);
-                                Error::Parse(e.to_string())
-                            })
+                            serde_json::from_value::<U>(json)
+                                .map_err(|e| Error::Parse(e.to_string()))
                         })
                         .await
                 } else {
