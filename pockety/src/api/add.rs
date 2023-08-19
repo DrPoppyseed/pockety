@@ -1,10 +1,12 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     error::Error,
     models::{ItemHas, ItemId, ItemImage, ItemVideo, Tags, Timestamp},
     Pockety,
 };
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct AddRequestBody {
     pub consumer_key: String,
     pub access_token: String,
@@ -14,7 +16,7 @@ pub struct AddRequestBody {
     pub tweet_id: Option<String>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AddResponse {
     /// A unique identifier for the added item
     pub item_id: ItemId,

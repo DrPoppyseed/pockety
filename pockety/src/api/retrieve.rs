@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use futures::TryFutureExt;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error,
@@ -16,7 +17,7 @@ use crate::{
     Pockety,
 };
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct RetrieveRequestBody {
     pub consumer_key: String,
     pub access_token: String,
@@ -33,7 +34,7 @@ pub struct RetrieveRequestBody {
     pub offset: Option<u32>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct RetrieveResponse {
     pub list: HashMap<String, PocketItem>,
     pub status: u16,

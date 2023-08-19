@@ -1,4 +1,5 @@
 use futures::TryFutureExt;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error::Error,
@@ -6,7 +7,7 @@ use crate::{
     Pockety,
 };
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
 pub enum PocketAction {
     Add(Add),
@@ -23,7 +24,7 @@ pub enum PocketAction {
     TagDelete(TagDelete),
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "add")]
 pub struct Add {
     pub item_id: ItemId,
@@ -34,16 +35,14 @@ pub struct Add {
     pub url: Option<String>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "archive")]
 pub struct Archive {
     pub item_id: ItemId,
     pub time: Timestamp,
 }
 
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, Copy, Clone, PartialEq, Eq,
-)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum UpdateName {
     Archive,
@@ -53,14 +52,14 @@ pub enum UpdateName {
     Delete,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Update {
     pub action: UpdateName,
     pub item_id: ItemId,
     pub time: Timestamp,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_add")]
 pub struct TagsAdd {
     pub item_id: ItemId,
@@ -68,7 +67,7 @@ pub struct TagsAdd {
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_replace")]
 pub struct TagsReplace {
     item_id: ItemId,
@@ -76,7 +75,7 @@ pub struct TagsReplace {
     time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_remove")]
 pub struct TagsRemove {
     pub item_id: ItemId,
@@ -84,14 +83,14 @@ pub struct TagsRemove {
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tags_clear")]
 pub struct TagsClear {
     pub item_id: ItemId,
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tag_rename")]
 pub struct TagRename {
     pub old_tag: String,
@@ -99,21 +98,21 @@ pub struct TagRename {
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(tag = "action", rename = "tag_delete")]
 pub struct TagDelete {
     pub tag: String,
     pub time: Option<Timestamp>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ModifyRequestBody {
     pub consumer_key: String,
     pub access_token: String,
     pub actions: Vec<PocketAction>,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ModifyResponse {
     pub status: u16,
     pub action_results: Vec<bool>,

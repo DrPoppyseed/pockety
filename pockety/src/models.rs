@@ -76,7 +76,7 @@ impl Serialize for ItemId {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct ItemImage {
     pub item_id: ItemId,
     pub image_id: ItemId,
@@ -87,7 +87,7 @@ pub struct ItemImage {
     pub credit: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ItemVideo {
     pub item_id: ItemId,
     pub video_id: ItemId,
@@ -98,9 +98,7 @@ pub struct ItemVideo {
     pub vid: String,
 }
 
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, PartialEq, Clone, Copy,
-)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum ItemStatus {
     #[serde(rename = "0")]
     Normal,
@@ -110,9 +108,7 @@ pub enum ItemStatus {
     Deleted,
 }
 
-#[derive(
-    serde::Serialize, serde::Deserialize, Debug, PartialEq, Clone, Copy,
-)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum ItemHas {
     #[serde(rename = "0")]
     No,
@@ -122,7 +118,7 @@ pub enum ItemHas {
     Is,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum DetailType {
     #[serde(rename = "simple")]
     Simple,
@@ -130,7 +126,7 @@ pub enum DetailType {
     Complete,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum Sort {
     #[serde(rename = "newest")]
     Newest,
@@ -142,7 +138,7 @@ pub enum Sort {
     Site,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum State {
     #[serde(rename = "unread")]
     Unread,
@@ -152,7 +148,7 @@ pub enum State {
     All,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum Tag {
     #[serde(rename = "_untagged_")]
     Untagged,
@@ -160,7 +156,7 @@ pub enum Tag {
     TagName,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Copy, Clone)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum ContentType {
     #[serde(rename = "article")]
     Article,
@@ -170,7 +166,7 @@ pub enum ContentType {
     Image,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct PocketItem {
     /// A unique identifier matching the saved item. This id must be used to
     /// perform any actions through the v3/modify endpoint.
