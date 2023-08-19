@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use serde::{de, Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -7,6 +7,12 @@ pub struct Timestamp(pub i64);
 impl Timestamp {
     pub fn now() -> Self {
         Self(Utc::now().timestamp())
+    }
+}
+
+impl From<DateTime<Utc>> for Timestamp {
+    fn from(date_time: DateTime<Utc>) -> Self {
+        Timestamp(date_time.timestamp())
     }
 }
 
