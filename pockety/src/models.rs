@@ -210,7 +210,7 @@ pub struct PocketItem {
     /// The title that Pocket found for the item when it was parsed
     pub resolved_title: Option<String>,
     /// The first few lines of the item (articles only)
-    pub excerpt: String,
+    pub excerpt: Option<String>,
     /// 0 or 1 - 1 if the item is an article
     pub is_article: String,
     // TODO: add description
