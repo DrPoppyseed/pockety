@@ -212,9 +212,9 @@ pub struct PocketItem {
     /// The first few lines of the item (articles only)
     pub excerpt: Option<String>,
     /// 0 or 1 - 1 if the item is an article
-    pub is_article: String,
+    pub is_article: Option<String>,
     // TODO: add description
-    pub is_index: String,
+    pub is_index: Option<String>,
     /// 0, 1, or 2 - 1 if the item has images in it - 2 if the item is an image
     pub has_image: ItemHas,
     /// 0, 1, or 2 - 1 if the item has videos in it - 2 if the item is a video
