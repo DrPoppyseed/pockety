@@ -1,10 +1,8 @@
 [package]
 name = "pockety"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["Haruki Jay Shimada <peaske16180@gmail.com>"]
 description = "Async client for Pocket (getpocket.com), inspired by octocrab"
-homepage = "https://github.com/DrPoppyseed/pockety"
-repository = "https://github.com/DrPoppyseed/pockety.git"
 license = "MIT"
 edition = "2021"
 
@@ -13,8 +11,6 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
-time = "0.3"
 async-trait = "0.1"
-url = "2"
 chrono = "0.4"
 futures = "0.3"

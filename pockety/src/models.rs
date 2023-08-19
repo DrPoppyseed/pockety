@@ -1,53 +1,25 @@
-use std::convert::TryFrom;
-
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{de, Deserialize, Serialize};
-use time::OffsetDateTime;
-
-use crate::error;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Timestamp(pub i64);
 
 impl Timestamp {
     pub fn now() -> Self {
-        Self(OffsetDateTime::now_utc().unix_timestamp())
+        Self(Utc::now().timestamp())
     }
 }
 
-impl From<DateTime<Utc>> for Timestamp {
-    fn from(date_time: DateTime<Utc>) -> Self {
-        let timestamp = date_time.timestamp();
-        Self(timestamp)
-    }
-}
-
-impl TryFrom<i64> for Timestamp {
-    type Error = error::Error;
-
-    fn try_from(timestamp: i64) -> Result<Self, Self::Error> {
-        let date_time = OffsetDateTime::from_unix_timestamp(timestamp)
-            .map_err(|e| {
-                Self::Error::Parse(format!(
-                    "failed to parse timestamp to datetime. error: {e:?}",
-                ))
-            })?;
-        let timestamp = date_time.unix_timestamp();
-
-        Ok(Self(timestamp))
-    }
-}
-
-// TODO: not all timestamps are typed the same.
-// we might want a raw response model in-between the fully typed structs?
 impl<'de> Deserialize<'de> for Timestamp {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        String::deserialize(deserializer)
-            .and_then(|op| op.parse::<i64>().map_err(de::Error::custom))
-            .and_then(|op| Timestamp::try_from(op).map_err(de::Error::custom))
+        String::deserialize(deserializer).and_then(|op| {
+            op.parse::<i64>()
+                .map(|op| Timestamp(op))
+                .map_err(de::Error::custom)
+        })
     }
 }
 
@@ -232,9 +204,9 @@ pub struct PocketItem {
     pub sort_id: Option<u32>,
     /// The final url of the item. For examples if the item was a shortened
     /// bit.ly link, this will be the actual article the url linked to.
-    pub resolved_url: String,
+    pub resolved_url: Option<String>,
     /// The title that Pocket found for the item when it was parsed
-    pub resolved_title: String,
+    pub resolved_title: Option<String>,
     /// The first few lines of the item (articles only)
     pub excerpt: String,
     /// 0 or 1 - 1 if the item is an article

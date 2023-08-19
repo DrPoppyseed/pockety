@@ -18,7 +18,6 @@ mod error;
 pub use error::{ApiError, Error, HttpError};
 pub mod models;
 pub use reqwest;
-use url::Url;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct GetRequestTokenRequest {
@@ -48,36 +47,29 @@ pub struct GetAccessTokenResponse {
 
 #[derive(Debug, Clone)]
 pub struct Pockety {
-    pub base_url: Url,
-    pub redirect_url: Url,
+    pub base_url: String,
+    pub redirect_url: String,
     pub(crate) consumer_key: String,
     pub client: Client,
 }
 
-// TODO: consider if we even need to use `Url` here in the first place
-// If reqwest is accepting string slices for urls, I don't see why we can't as well.
 impl Pockety {
     pub const BASE_URL: &str = "https://getpocket.com/v3";
     pub const AUTHORIZE_URL: &str = "https://getpocket.com/auth/authorize";
 
-    pub fn new(
-        consumer_key: String,
-        redirect_url: impl TryInto<Url>,
-    ) -> Result<Self, Error> {
-        let base_url = Url::try_from(Self::BASE_URL)?;
-        let redirect_url = redirect_url.try_into().map_err(|_| {
-            Error::Parse(
-                "failed to parse redirect_url param to Url".to_string(),
-            )
-        })?;
-        let client = Client::new();
+    pub fn new<T, U>(consumer_key: T, redirect_url: U) -> Result<Self, Error>
+    where
+        T: Into<String>,
+        U: Into<String>,
+    {
+        let pockety = Self {
+            base_url: Self::BASE_URL.to_string(),
+            redirect_url: redirect_url.into(),
+            consumer_key: consumer_key.into(),
+            client: Client::new(),
+        };
 
-        Ok(Self {
-            base_url,
-            redirect_url,
-            consumer_key,
-            client,
-        })
+        Ok(pockety)
     }
 
     pub async fn post<T, U>(

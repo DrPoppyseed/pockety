@@ -67,9 +67,3 @@ impl From<reqwest::header::ToStrError> for Error {
         Error::Json(error.to_string())
     }
 }
-
-impl From<url::ParseError> for Error {
-    fn from(error: url::ParseError) -> Self {
-        Error::Parse(error.to_string())
-    }
-}
