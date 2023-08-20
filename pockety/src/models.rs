@@ -184,14 +184,14 @@ pub struct PocketItem {
     /// the same resolved_id. If this value is 0, it means that Pocket has not
     /// processed the item. Normally this happens within seconds but is possible
     /// you may request the item before it has been resolved.
-    pub resolved_id: ItemId,
+    pub resolved_id: Option<ItemId>,
     /// The actual url that was saved with the item. This url should be used if
     /// the user wants to view the item.
-    pub given_url: String,
+    pub given_url: Option<String>,
     /// The title that was saved along with the item.
-    pub given_title: String,
+    pub given_title: Option<String>,
     /// 0 or 1 - 1 If the item is favorited
-    pub favorite: String,
+    pub favorite: Option<String>,
     /// 0, 1, 2 - 1 if the item is archived - 2 if the item should be deleted
     pub status: ItemStatus,
     // TODO: add description
@@ -216,11 +216,11 @@ pub struct PocketItem {
     // TODO: add description
     pub is_index: Option<String>,
     /// 0, 1, or 2 - 1 if the item has images in it - 2 if the item is an image
-    pub has_image: ItemHas,
+    pub has_image: Option<ItemHas>,
     /// 0, 1, or 2 - 1 if the item has videos in it - 2 if the item is a video
-    pub has_video: ItemHas,
+    pub has_video: Option<ItemHas>,
     /// How many words are in the article
-    pub word_count: String,
+    pub word_count: Option<String>,
     /// A JSON object of the user tags associated with the item
     pub tags: Option<String>,
     /// A JSON object listing all of the authors associated with the item
