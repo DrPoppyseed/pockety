@@ -4,11 +4,19 @@ An async API client for getpocket.com with an interface loosely inspired by octo
 
 ## Auth flow
 
-getpocket.com's authentication flow can get confusing, especially when they only
-have written documentation. However, once represented in a diagram, things start
-to look much simpler.
-
-<img src="assets/auth-sequence-diagram.png" alt="drawing" width="600"/>
+```mermaid
+sequenceDiagram
+	client->>server: initiate auth process
+	server->>getpocket.com: POST /oauth/request
+	getpocket.com->>server: request_token, redirect_url
+  server->>client: redirect_url
+  client->>getpocket.com: authorize client
+  getpocket.com->>client: 
+  client->>server: request access_token
+  server->>getpocket.com: POST /oauth/authorize
+  getpocket.com->>server: access_token
+  server->>client: access_token
+```
 
 ## Examples
 
