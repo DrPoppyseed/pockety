@@ -24,7 +24,7 @@ const Comp: Component = () => {
     const result = await axios.post("http://localhost:8080/auth/pocket");
 
     if (result.status === 200) {
-      localStorage.setItem("token", result.data.requestToken); 
+      localStorage.setItem("token", result.data.requestToken);
       setAuthUri(result.data.authUri);
     }
   };
@@ -46,7 +46,7 @@ const Comp: Component = () => {
           }}
           href={authUri().toString()}
         >
-          Grant permissions for Pocket 
+          Grant permissions for Pocket
         </a>
       </Show>
     </div>
@@ -101,7 +101,7 @@ const Auth: Component = () => {
 
 const App: Component = () => {
   return (
-    <Routes> 
+    <Routes>
       <Route path="/" component={Comp} />
       <Route path="/login" component={Auth} />
     </Routes>

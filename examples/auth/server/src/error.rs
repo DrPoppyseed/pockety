@@ -52,12 +52,8 @@ impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
             Error::Cookie(_) => (StatusCode::BAD_REQUEST, "Unauthorized"),
-            Error::Pockety(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
-            }
-            Error::Axum(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
-            }
+            Error::Pockety(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
+            Error::Axum(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error"),
         };
 
         let body = Json(json!({

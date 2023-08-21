@@ -1,8 +1,9 @@
 target
-Cargo.lock
 scraps
+dist
+node_modules
 
-.dccache
+Cargo.lock
 
 .vscode
 .idea

@@ -5,30 +5,18 @@ use error::Error;
 use pockety::Pockety;
 
 use axum::{
-    extract::{
-        rejection::TypedHeaderRejectionReason,
-        FromRef,
-        FromRequestParts,
-    },
+    extract::{rejection::TypedHeaderRejectionReason, FromRef, FromRequestParts},
     headers,
     http::{header::COOKIE, request::Parts, Method},
     routing::{get, post},
-    RequestPartsExt,
-    Router,
-    Server,
-    TypedHeader,
+    RequestPartsExt, Router, Server, TypedHeader,
 };
 use rand::{thread_rng, RngCore};
 use serde::{Deserialize, Serialize};
 use tower_http::{cors::CorsLayer, trace};
 use tracing::Level;
 
-use crate::api::{
-    get_access_token,
-    get_articles,
-    get_request_token,
-    health_check,
-};
+use crate::api::{get_access_token, get_articles, get_request_token, health_check};
 
 mod api;
 mod error;
@@ -75,9 +63,10 @@ async fn main() {
         .allow_credentials(true);
 
     let pockety = Pockety::new(
-        &env::var("POCKET_CONSUMER_KEY").expect("Missing POCKET_CONSUMER_KEY"),
-        &env::var("POCKET_REDIRECT_URI").expect("Missing POCKET_REDIRECT_URI"),
-    );
+        env::var("POCKET_CONSUMER_KEY").expect("Missing POCKET_CONSUMER_KEY"),
+        env::var("POCKET_REDIRECT_URI").expect("Missing POCKET_REDIRECT_URI"),
+    )
+    .expect("failed to create Pockety instance.");
 
     let app_state = AppState { pockety, store };
 
@@ -89,12 +78,8 @@ async fn main() {
         .layer(cors_layer)
         .layer(
             trace::TraceLayer::new_for_http()
-                .make_span_with(
-                    trace::DefaultMakeSpan::new().level(Level::INFO),
-                )
-                .on_response(
-                    trace::DefaultOnResponse::new().level(Level::INFO),
-                ),
+                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
         )
         .with_state(app_state);
 
@@ -134,14 +119,11 @@ where
                     TypedHeaderRejectionReason::Missing => {
                         Error::Cookie("missing Cookie header".to_string())
                     }
-                    _ => Error::Cookie(
-                        "unexpected error getting Cookie header(s): {e}"
-                            .to_string(),
-                    ),
+                    _ => {
+                        Error::Cookie("unexpected error getting Cookie header(s): {e}".to_string())
+                    }
                 },
-                _ => Error::Cookie(
-                    "unexpected error getting cookies: {e}".to_string(),
-                ),
+                _ => Error::Cookie("unexpected error getting cookies: {e}".to_string()),
             })?;
 
         let session_cookie = cookies

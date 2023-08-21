@@ -1,8 +1,6 @@
 use async_session::{
     chrono::{Duration, Utc},
-    MemoryStore,
-    Session,
-    SessionStore,
+    MemoryStore, Session, SessionStore,
 };
 use axum::{
     extract::{self, State},
@@ -10,7 +8,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use pockety::{models::PocketItem, Pockety, PocketyUrl};
+use pockety::{models::PocketItem, Pockety};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 
@@ -66,14 +64,12 @@ pub struct GetRequestTokenResponse {
     auth_uri: String,
 }
 
-pub async fn get_request_token(
-    State(pockety): State<Pockety>,
-) -> Result<GetRequestTokenResponse> {
-    let request_token = pockety.get_request_token(None).await?;
+pub async fn get_request_token(State(pockety): State<Pockety>) -> Result<GetRequestTokenResponse> {
+    let request_token = pockety.get_request_token(None).await.map(|res| res.code)?;
 
     let auth_uri = format!(
         "{}?request_token={request_token}&redirect_uri={}",
-        PocketyUrl::AUTHORIZE,
+        Pockety::AUTHORIZE_URL,
         pockety.redirect_url
     );
 
@@ -107,8 +103,9 @@ pub async fn get_access_token(
     extract::Json(request): extract::Json<GetAccessTokenRequest>,
 ) -> Result<GetAccessTokenResponse> {
     let access_token = pockety
-        .get_access_token(&request.request_token, None)
-        .await?;
+        .get_access_token(&request.request_token)
+        .await
+        .map(|res| res.access_token)?;
 
     let session_id: String = thread_rng()
         .sample_iter(&Alphanumeric)
@@ -130,8 +127,7 @@ pub async fn get_access_token(
         .ok()
         .flatten()
         .ok_or(Error::Cookie("Failed to store session".to_string()))?;
-    let cookie =
-        format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Path=/; HttpOnly");
+    let cookie = format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Path=/; HttpOnly");
 
     let mut headers = HeaderMap::new();
     headers.insert(SET_COOKIE, cookie.parse().unwrap());
@@ -152,9 +148,7 @@ pub struct GetArticlesResponse {
     articles: Vec<PocketItem>,
 }
 
-pub async fn get_articles(
-    State(pockety): State<Pockety>,
-) -> Result<GetArticlesResponse> {
+pub async fn get_articles(State(pockety): State<Pockety>) -> Result<GetArticlesResponse> {
     let since = Utc::now() - Duration::days(7);
     let articles = pockety.retrieve().since(since).execute().await?;
 

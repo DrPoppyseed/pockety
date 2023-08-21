@@ -5,20 +5,20 @@ edition = "2021"
 
 [dependencies]
 # web framework
-axum = { version = "0.6.3", features = ["headers"] }
-async-session = "3.0.0"
+axum = { version = "0.6", features = ["headers"] }
+async-session = "3"
 
-tower = "0.4.13"
-tower-http = { version = "0.3.5", features = ["cors", "timeout", "trace"] }
+tower = "0.4"
+tower-http = { version = "0.3", features = ["cors", "timeout", "trace"] }
 
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-serde = { version = "1.0.152", features = ["derive"] }
-tokio = { version = "1.24.2", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
 
 # we need rand crate to generate a session secret
-rand = "0.8.5"
+rand = "0.8"
 
 # pocket api client
 pockety = { path = "../../../pockety" }
