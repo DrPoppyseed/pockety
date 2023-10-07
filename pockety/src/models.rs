@@ -121,6 +121,16 @@ pub enum ItemStatus {
     Deleted,
 }
 
+impl ItemStatus {
+    pub fn as_u8(&self) -> u8 {
+        match self {
+            ItemStatus::Normal => 0,
+            ItemStatus::Archived => 1,
+            ItemStatus::Deleted => 2,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum ItemHas {
     #[serde(rename = "0")]
@@ -131,12 +141,31 @@ pub enum ItemHas {
     Is,
 }
 
+impl ItemHas {
+    pub fn as_u8(&self) -> u8 {
+        match self {
+            ItemHas::No => 0,
+            ItemHas::Yes => 1,
+            ItemHas::Is => 2,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum DetailType {
     #[serde(rename = "simple")]
     Simple,
     #[serde(rename = "complete")]
     Complete,
+}
+
+impl AsRef<str> for DetailType {
+    fn as_ref(&self) -> &str {
+        match self {
+            DetailType::Simple => "simple",
+            DetailType::Complete => "complete",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -151,6 +180,17 @@ pub enum Sort {
     Site,
 }
 
+impl AsRef<str> for Sort {
+    fn as_ref(&self) -> &str {
+        match self {
+            Sort::Newest => "newest",
+            Sort::Oldest => "oldest",
+            Sort::Title => "title",
+            Sort::Site => "site",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum State {
     #[serde(rename = "unread")]
@@ -161,12 +201,31 @@ pub enum State {
     All,
 }
 
+impl AsRef<str> for State {
+    fn as_ref(&self) -> &str {
+        match self {
+            State::Unread => "unread",
+            State::Archive => "archive",
+            State::All => "all",
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum Tag {
     #[serde(rename = "_untagged_")]
     Untagged,
     #[serde(rename = "tag_name")]
     TagName,
+}
+
+impl AsRef<str> for Tag {
+    fn as_ref(&self) -> &str {
+        match self {
+            Tag::Untagged => "_untagged_",
+            Tag::TagName => "tag_name",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
@@ -177,6 +236,16 @@ pub enum ContentType {
     Video,
     #[serde(rename = "image")]
     Image,
+}
+
+impl AsRef<str> for ContentType {
+    fn as_ref(&self) -> &str {
+        match self {
+            ContentType::Article => "article",
+            ContentType::Video => "video",
+            ContentType::Image => "image",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
