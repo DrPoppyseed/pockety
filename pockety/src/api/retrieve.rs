@@ -5,15 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error,
-    models::{
-        ContentType,
-        DetailType,
-        PocketItem,
-        Sort,
-        State,
-        Tag,
-        Timestamp,
-    },
+    models::{ContentType, DetailType, PocketItem, Sort, State, Tag, Timestamp},
     Pockety,
 };
 

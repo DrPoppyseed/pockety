@@ -72,11 +72,7 @@ impl Pockety {
         Ok(pockety)
     }
 
-    pub async fn post<T, U>(
-        &self,
-        relative_url: &str,
-        body: Option<&T>,
-    ) -> Result<U, Error>
+    pub async fn post<T, U>(&self, relative_url: &str, body: Option<&T>) -> Result<U, Error>
     where
         T: Serialize,
         U: DeserializeOwned,
@@ -108,8 +104,7 @@ impl Pockety {
                         })
                         .await
                 } else {
-                    let mut http_error =
-                        HttpError::new().status_code(response.status());
+                    let mut http_error = HttpError::new().status_code(response.status());
                     http_error.error_code = response
                         .headers()
                         .get("X-Error-Code")

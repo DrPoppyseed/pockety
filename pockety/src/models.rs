@@ -21,11 +21,8 @@ impl<'de> Deserialize<'de> for Timestamp {
     where
         D: serde::Deserializer<'de>,
     {
-        String::deserialize(deserializer).and_then(|op| {
-            op.parse::<i64>()
-                .map(|op| Timestamp(op))
-                .map_err(de::Error::custom)
-        })
+        String::deserialize(deserializer)
+            .and_then(|op| op.parse::<i64>().map(Timestamp).map_err(de::Error::custom))
     }
 }
 
@@ -82,7 +79,7 @@ impl Serialize for ItemId {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct ItemImage {
     pub item_id: ItemId,
     pub image_id: ItemId,
@@ -93,7 +90,7 @@ pub struct ItemImage {
     pub credit: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ItemVideo {
     pub item_id: ItemId,
     pub video_id: ItemId,
@@ -104,7 +101,7 @@ pub struct ItemVideo {
     pub vid: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ItemAuthor {
     pub id: ItemId,
     pub name: String,
@@ -248,7 +245,7 @@ impl AsRef<str> for ContentType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PocketItem {
     /// A unique identifier matching the saved item. This id must be used to
     /// perform any actions through the v3/modify endpoint.
