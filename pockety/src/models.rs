@@ -104,6 +104,13 @@ pub struct ItemVideo {
     pub vid: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct ItemAuthor {
+    pub id: ItemId,
+    pub name: String,
+    pub url: String,
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
 pub enum ItemStatus {
     #[serde(rename = "0")]
@@ -224,7 +231,7 @@ pub struct PocketItem {
     /// A JSON object of the user tags associated with the item
     pub tags: Option<String>,
     /// A JSON object listing all of the authors associated with the item
-    pub authors: Option<String>,
+    pub authors: Option<Vec<ItemAuthor>>,
     /// A JSON object listing all of the images associated with the item
     pub images: Option<Vec<ItemImage>>,
     /// A JSON object listing all of the videos associated with the item
