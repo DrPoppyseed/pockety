@@ -1,4 +1,6 @@
-use std::fmt::Display;
+use std::fmt::{Display, Formatter, Result};
+
+use crate::RateLimits;
 
 #[derive(Debug)]
 pub enum Error {
@@ -9,7 +11,7 @@ pub enum Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Error::Http(error) => write!(f, "Http error: {error:?}"),
             Error::Api(error) => write!(f, "Api error: {error:?}"),
@@ -24,6 +26,7 @@ pub struct HttpError {
     pub status: reqwest::StatusCode,
     pub error_code: Option<String>,
     pub error_message: Option<String>,
+    pub rate_limits: RateLimits,
 }
 
 impl HttpError {
@@ -38,13 +41,23 @@ impl HttpError {
         Self { status, ..self }
     }
 
-    pub fn error_code(self, error_code: Option<String>) -> Self {
-        Self { error_code, ..self }
+    pub fn error_code<T: ToString>(self, error_code: T) -> Self {
+        Self {
+            error_code: Some(error_code.to_string()),
+            ..self
+        }
     }
 
-    pub fn error_message(self, error_message: Option<String>) -> Self {
+    pub fn error_message<T: ToString>(self, error_message: T) -> Self {
         Self {
-            error_message,
+            error_message: Some(error_message.to_string()),
+            ..self
+        }
+    }
+
+    pub fn rate_limits(self, rate_limits: RateLimits) -> Self {
+        Self {
+            rate_limits,
             ..self
         }
     }
@@ -58,7 +71,7 @@ pub enum ApiError {
 
 impl From<reqwest::Error> for Error {
     fn from(error: reqwest::Error) -> Self {
-        Error::Http(HttpError::new().error_message(Some(error.to_string())))
+        Error::Http(HttpError::new().error_message(error))
     }
 }
 

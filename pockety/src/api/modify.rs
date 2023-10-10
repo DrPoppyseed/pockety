@@ -2,9 +2,8 @@ use futures::TryFutureExt;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::Error,
     models::{ItemId, Tags, Timestamp},
-    Pockety,
+    ApiResult, Pockety, PocketyResponse,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -142,7 +141,7 @@ impl<'po> ModifyHandler<'po> {
         self
     }
 
-    pub async fn send(self) -> Result<Vec<bool>, Error> {
+    pub async fn send(self) -> ApiResult<Vec<bool>> {
         let body = ModifyRequestBody {
             consumer_key: self.pockety.consumer_key.clone(),
             ..self.body
@@ -150,7 +149,10 @@ impl<'po> ModifyHandler<'po> {
 
         self.pockety
             .post::<ModifyRequestBody, ModifyResponse>("/send", Some(&body))
-            .map_ok(|res| res.action_results)
+            .map_ok(|res| PocketyResponse {
+                rate_limits: res.rate_limits,
+                data: res.data.action_results,
+            })
             .await
     }
 }

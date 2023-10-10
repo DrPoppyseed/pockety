@@ -108,7 +108,7 @@ where
     async fn from_request_parts(
         parts: &mut Parts,
         state: &S,
-    ) -> std::result::Result<Self, Self::Rejection> {
+    ) -> Result<Self, Self::Rejection> {
         let store = MemoryStore::from_ref(state);
 
         let cookies = parts

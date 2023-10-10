@@ -4,9 +4,8 @@ use futures::TryFutureExt;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error,
     models::{ContentType, DetailType, PocketItem, Sort, State, Tag, Timestamp},
-    Pockety,
+    ApiResult, Pockety, PocketyResponse,
 };
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -113,7 +112,7 @@ impl<'po> RetrieveHandler<'po> {
         self
     }
 
-    pub async fn execute(self) -> Result<Vec<PocketItem>, error::Error> {
+    pub async fn execute(self) -> ApiResult<Vec<PocketItem>> {
         let body = RetrieveRequestBody {
             consumer_key: self.pockety.consumer_key.clone(),
             ..self.body
@@ -121,7 +120,10 @@ impl<'po> RetrieveHandler<'po> {
 
         self.pockety
             .post::<RetrieveRequestBody, RetrieveResponse>("/get", Some(&body))
-            .map_ok(|res| res.list.into_values().collect())
+            .map_ok(|res| PocketyResponse {
+                rate_limits: res.rate_limits,
+                data: res.data.list.into_values().collect(),
+            })
             .await
     }
 }

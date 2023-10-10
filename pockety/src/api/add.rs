@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::Error,
     models::{ItemHas, ItemId, ItemImage, ItemVideo, Tags, Timestamp},
-    Pockety,
+    ApiResult, Pockety,
 };
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -108,7 +107,7 @@ impl<'po> AddHandler<'po> {
         self
     }
 
-    pub async fn send(self) -> Result<AddResponse, Error> {
+    pub async fn send(self) -> ApiResult<AddResponse> {
         let body = AddRequestBody {
             consumer_key: self.pockety.consumer_key.clone(),
             ..self.body

@@ -4,6 +4,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -14,8 +15,8 @@ pub enum Error {
 
 impl std::error::Error for Error {}
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Error::Cookie(message) => write!(f, "Cookie error: {message}"),
             Error::Pockety(message) => write!(f, "Pockety error: {message}"),
