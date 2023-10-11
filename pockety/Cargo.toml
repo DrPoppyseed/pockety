@@ -1,6 +1,6 @@
 [package]
 name = "pockety"
-version = "0.1.0-beta.2"
+version = "0.1.0-beta.3"
 authors = ["Haruki Jay Shimada <peaske16180@gmail.com>"]
 description = "Async client for Pocket (getpocket.com), inspired by octocrab"
 license = "MIT"
@@ -14,3 +14,7 @@ tokio = { version = "1", features = ["full"] }
 async-trait = "0.1"
 chrono = "0.4"
 futures = "0.3"
+log = { version = "0.4", optional = true }
+
+[features]
+debug = ["log"]

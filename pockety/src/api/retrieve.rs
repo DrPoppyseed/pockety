@@ -112,6 +112,7 @@ impl<'po> RetrieveHandler<'po> {
         self
     }
 
+    #[cfg(not(feature = "debug"))]
     pub async fn execute(self) -> ApiResult<Vec<PocketItem>> {
         let body = RetrieveRequestBody {
             consumer_key: self.pockety.consumer_key.clone(),
@@ -124,6 +125,26 @@ impl<'po> RetrieveHandler<'po> {
                 rate_limits: res.rate_limits,
                 data: res.data.list.into_values().collect(),
             })
+            .await
+    }
+
+    #[cfg(feature = "debug")]
+    pub async fn execute(self) -> ApiResult<Vec<PocketItem>> {
+        let body = RetrieveRequestBody {
+            consumer_key: self.pockety.consumer_key.clone(),
+            ..self.body
+        };
+
+        self.pockety
+            .post::<RetrieveRequestBody, RetrieveResponse>("/get", Some(&body))
+            .map_ok(|res| PocketyResponse {
+                rate_limits: res.rate_limits,
+                data: res.data.list.into_values().collect(),
+            })
+            .inspect_ok(|res| {
+                log::debug!("[POCKETY_RETRIEVE] Request Body: {body:?}, Response: {res:?}")
+            })
+            .inspect_err(|error| log::debug!("[POCKETY_RETRIEVE] Error: {error:?}"))
             .await
     }
 }
